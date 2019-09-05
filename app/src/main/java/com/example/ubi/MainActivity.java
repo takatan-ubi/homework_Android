@@ -20,6 +20,7 @@ import java.util.List;
 public class MainActivity extends Activity implements Runnable, SensorEventListener {
     SensorManager sm;
     TextView tv;
+    Button recordStartButton,recordStopButton;
     Handler h;
     double gx, gy, gz, a;
     boolean isRecording = false;
@@ -30,13 +31,41 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
         super.onCreate(savedInstanceState);
 
         LinearLayout ll = new LinearLayout(this);
-        setContentView(ll);
-
-        tv = new TextView(this);
-        ll.addView(tv);
+        setContentView(R.layout.activity_main);
 
         h = new Handler();
         h.postDelayed(this, 500);
+
+        // 加速度データの表示テキストウィンド
+        tv = (TextView)findViewById(R.id.SenserDataText) ;
+
+        // デバッグ用　状態表示
+        final TextView stateText = (TextView)findViewById(R.id.stateText);
+
+        //データ記録開始,停止ボタン
+        recordStartButton = (Button)findViewById(R.id.recordStartButton);
+        recordStopButton = (Button)findViewById(R.id.recordStopButton);
+
+
+        recordStartButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(!isRecording){
+                    stateText.setText("記録中");
+                    isRecording = true;
+                }
+            }
+        });
+
+        recordStopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(isRecording){
+                    stateText.setText("待機中");
+                    isRecording = false;
+                }
+            }
+        });
 
 
 
@@ -83,24 +112,20 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
         gz = event.values[2];
         a = (float)Math.sqrt(gx*gx+gy*gy+gz*gz);
 
-        String filename = "kasokusenser.csv";
-        String output = BigDecimal.valueOf(gx).toPlainString()+","
-                +BigDecimal.valueOf(gy).toPlainString()+","
-                +BigDecimal.valueOf(gz).toPlainString()+","
-                +BigDecimal.valueOf(a).toPlainString()+"\n";
-
-        FileOutputStream outputStream;
-        try {
-            outputStream = openFileOutput(filename,MODE_APPEND);
-            outputStream.write(output.getBytes());
-            outputStream.close();
-
-
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
+        if(isRecording) {
+            String filename = "kasokusenser.csv";
+            String output = BigDecimal.valueOf(gx).toPlainString() + ","
+                    + BigDecimal.valueOf(gy).toPlainString() + ","
+                    + BigDecimal.valueOf(gz).toPlainString() + ","
+                    + BigDecimal.valueOf(a).toPlainString() + "\n";
+            FileOutputStream outputStream;
+            try {
+                outputStream = openFileOutput(filename, MODE_APPEND);
+                outputStream.write(output.getBytes());
+                outputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
     }
