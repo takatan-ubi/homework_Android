@@ -1,42 +1,29 @@
 package com.example.ubi;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.util.List;
-
-import static android.provider.Telephony.Mms.Part.FILENAME;
 
 public class MainActivity extends Activity implements Runnable, SensorEventListener {
     SensorManager sm;
     TextView tv;
     Handler h;
-    float gx, gy, gz, a;
+    double gx, gy, gz, a;
+    boolean isRecording = false;
+    boolean flag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +37,8 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
 
         h = new Handler();
         h.postDelayed(this, 500);
+
+
 
 
     }
@@ -95,10 +84,10 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
         a = (float)Math.sqrt(gx*gx+gy*gy+gz*gz);
 
         String filename = "kasokusenser.csv";
-        String output = String.valueOf(gx)+","
-                +String.valueOf(gy)+","
-                +String.valueOf(gz)+","
-                +String.valueOf(a)+"\n";
+        String output = BigDecimal.valueOf(gx).toPlainString()+","
+                +BigDecimal.valueOf(gy).toPlainString()+","
+                +BigDecimal.valueOf(gz).toPlainString()+","
+                +BigDecimal.valueOf(a).toPlainString()+"\n";
 
         FileOutputStream outputStream;
         try {
@@ -106,15 +95,14 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
             outputStream.write(output.getBytes());
             outputStream.close();
 
-            //終了メッセージを画面に出力する
-            Log.v("test","出力が完了しました。");
+
 
         } catch (Exception e) {
-            //例外時処理
-            Log.v("test","出力に失敗しました。");
+
             e.printStackTrace();
 
         }
+
     }
 
     @Override
@@ -127,17 +115,7 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
     };
 
-    private static void verifyStoragePermissions(Activity activity) {
-        int readPermission = ContextCompat.checkSelfPermission(activity, mPermissions[0]);
-        int writePermission = ContextCompat.checkSelfPermission(activity, mPermissions[1]);
 
-        if (writePermission != PackageManager.PERMISSION_GRANTED ||
-                readPermission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                    activity,
-                    mPermissions,
-                    REQUEST_EXTERNAL_STORAGE_CODE
-            );
-        }
-    }
+
+
 }
