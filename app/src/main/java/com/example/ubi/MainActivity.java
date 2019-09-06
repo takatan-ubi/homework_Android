@@ -86,12 +86,12 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
             @Override
             public void onClick(View view) {
                 if(!isRecording){
-//                    String path = "/data/data/com.example.ubi/"+radioButton.getText()+".csv";
-//                    File f =   new File(path);
-//                    if (f.exists()){
-//                        f.delete();
-//                        Log.v("test","file delete" + radioButton.getText());
-//                    }
+                    String path = "/data/data/com.example.ubi/files/"+state+".csv";
+                    File f =   new File(path);
+                    if (f.exists()){
+                        f.delete();
+                        Log.v("test","file delete " + state + ".csv");
+                    }
                     stateText.setText("記録中");
                     isRecording = true;
                 }
