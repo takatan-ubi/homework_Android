@@ -8,9 +8,10 @@
 
     <TextView
         android:id="@+id/stateText"
-        android:layout_width="108dp"
-        android:layout_height="51dp"
-        android:text="Test"
+        android:layout_width="97dp"
+        android:layout_height="49dp"
+        android:text="@string/test"
+        android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -102,8 +103,9 @@
         android:layout_height="wrap_content"
         android:onClick="startLearning"
         android:text="Learn"
-        tools:layout_editor_absoluteX="147dp"
-        tools:layout_editor_absoluteY="638dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
