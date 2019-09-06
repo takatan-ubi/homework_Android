@@ -32,13 +32,15 @@
 
     <TextView
         android:id="@+id/SenserDataText"
-        android:layout_width="246dp"
-        android:layout_height="141dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_width="195dp"
+        android:layout_height="93dp"
+        android:layout_marginStart="96dp"
+        android:layout_marginLeft="96dp"
+        android:layout_marginTop="112dp"
         android:text="TextView"
         android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -54,28 +56,54 @@
         app:layout_constraintTop_toBottomOf="@+id/stateText"
         app:layout_constraintVertical_bias="0.201" />
 
-    <RadioButton
-        android:id="@+id/radioButton"
+    <RadioGroup
+        android:id="@+id/RadioGroup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="RadioButton"
-        tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="483dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/stateText">
 
-    <RadioButton
-        android:id="@+id/radioButton2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="RadioButton"
-        tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="534dp" />
+        <RadioButton
+            android:id="@+id/standingRadio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:onClick="checkRadioButton"
+            android:text="Standing"
+            tools:layout_editor_absoluteX="155dp"
+            tools:layout_editor_absoluteY="509dp" />
 
-    <RadioButton
-        android:id="@+id/radioButton3"
+        <RadioButton
+            android:id="@+id/walkingRadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="checkRadioButton"
+            android:text="Walking"
+            tools:layout_editor_absoluteX="155dp"
+            tools:layout_editor_absoluteY="541dp" />
+
+        <RadioButton
+            android:id="@+id/runningRadio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="checkRadioButton"
+            android:text="Running"
+            tools:layout_editor_absoluteX="155dp"
+            tools:layout_editor_absoluteY="573dp" />
+
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/learnButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="RadioButton"
-        tools:layout_editor_absoluteX="148dp"
-        tools:layout_editor_absoluteY="582dp" />
+        android:onClick="startLearning"
+        android:text="Learn"
+        tools:layout_editor_absoluteX="147dp"
+        tools:layout_editor_absoluteY="638dp" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
