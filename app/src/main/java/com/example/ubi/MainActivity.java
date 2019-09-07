@@ -29,6 +29,7 @@ import java.util.List;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.classifiers.functions.SMO;
+import weka.classifiers.trees.J48;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.FastVector;
@@ -66,7 +67,7 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
         setContentView(R.layout.activity_main);
 
         h = new Handler();
-        h.postDelayed(this, 500);
+        h.postDelayed(this, 100);
 
         // 加速度データの表示テキストウィンド
         tv = (TextView)findViewById(R.id.SenserDataText);
@@ -84,7 +85,7 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
 
         recordStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View view){
                 if(!isRecording){
                     String path = "/data/data/com.example.ubi/files/"+state+".csv";
                     File f =   new File(path);
@@ -113,10 +114,6 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
             }
         });
 
-        if(isLearned) {
-
-        }
-
     }
 
     public void checkRadioButton(View v){
@@ -128,6 +125,13 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
     }
 
     public void startLearning(View v){
+        if(isLearned){
+            isLearned = false;
+            stateText.setText("待機中");
+            endRecordNum = 0;
+            return;
+        }
+
         try {
             stateText.setText("学習中");
             //学習データの生成
@@ -137,24 +141,32 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
             instances.setClassIndex(1);
 
             //分類機の生成
-            classifier = new SMO();
+            classifier = new J48();
             classifier.buildClassifier(instances);
             eval = new Evaluation(instances);
-            eval.evaluateModel(classifier, instances);      //モデルと学習データから評価
-            Log.v("test",eval.toSummaryString());
             a = new Attribute("a", 0);
+
+            judgment();
+
+            isLearned = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void judgment(){
+        try {
+            eval.evaluateModel(classifier, instances);      //モデルと学習データから評価
             Instance instance = new DenseInstance(2) {
             };
             instance.setValue(a, acceleration);
             instance.setDataset(instances);
             double result = classifier.classifyInstance(instance);
-            stateText.setText(stateList.get((int) result));
-            isLearned = true;
-        } catch (Exception e) {
+            stateText.setText(stateList.get((int) result)+":"+result);
+        } catch (Exception e){
             e.printStackTrace();
-            Log.v("test","damedesita");
         }
-
     }
 
     public void changeCsvToArff(){
@@ -165,15 +177,13 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
             String filetop =
                     "@relation smartphoneZombie\n" +
                             "\n" +
-//                            "@attribute x numeric\n" +
-//                            "@attribute y numeric\n" +
-//                            "@attribute z numeric\n" +
                             "@attribute a numeric\n" +
                             "@attribute state {Standing, Walking, Running}\n" +
                             "\n" +
                             "@DATA\n";
             File file = new File("/data/data/com.example.ubi/files/learnData.arff");
             Log.v("test","ファイルを初期化したい");
+
             if (file.exists()){
                 file.delete();
                 Log.v("test","ファイルの初期化");
@@ -215,7 +225,12 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
                 + "Z-axis : " + gz + "\n"
                 + "XYZ    : " + acceleration + "\n"
                 + "endNum :" + endRecordNum + "\n");
-        h.postDelayed(this, 500);
+
+        if(isLearned) {
+            judgment();
+        }
+
+        h.postDelayed(this, 100);
     }
 
     @Override
