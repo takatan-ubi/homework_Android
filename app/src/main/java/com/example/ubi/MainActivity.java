@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -40,7 +42,7 @@ import weka.core.converters.ConverterUtils.DataSource;
 public class MainActivity extends Activity implements Runnable, SensorEventListener {
     SensorManager sm;
     TextView tv;
-    Button recordStartButton,recordStopButton;
+    Button recordStartButton, learnButton;
 
     RadioGroup radioGroup;
     RadioButton radioButton;
@@ -48,17 +50,21 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
     Handler h;
     double gx, gy, gz, acceleration;
     boolean isRecording = false;
-    int endRecordNum = 0;
     String filename = "Standing.csv";
     String state ="Standing";
+    int sampleNum = 0;
     List<String> stateList = Arrays.asList("Standing","Walking","Running");
     TextView stateText;
+
 
     Evaluation eval;
     Instances instances;
     Classifier classifier;
     Attribute a;
     boolean isLearned = false;
+
+    private ProgressBar progressBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +73,7 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
         setContentView(R.layout.activity_main);
 
         h = new Handler();
-        h.postDelayed(this, 100);
+        h.postDelayed(this, 60);
 
         // 加速度データの表示テキストウィンド
         tv = (TextView)findViewById(R.id.SenserDataText);
@@ -75,12 +81,18 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
         // データ記録時の状態の選択をするラジオボタン
         radioGroup = (RadioGroup)findViewById(R.id.RadioGroup);
 
-        // デバッグ用　状態表示
+        // 状態表示
         stateText = (TextView)findViewById(R.id.stateText);
+        stateText.setText("待機中");
 
-        //データ記録開始,停止ボタン
+        //データ記録開始ボタン
         recordStartButton = (Button)findViewById(R.id.recordStartButton);
-        recordStopButton = (Button)findViewById(R.id.recordStopButton);
+        learnButton = (Button)findViewById(R.id.learnButton);
+
+        progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        progressBar.setMax(1000);
+        progressBar.setProgress(sampleNum);
+        progressBar.setMin(0);
 
 
         recordStartButton.setOnClickListener(new View.OnClickListener() {
@@ -98,22 +110,14 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
                 }
             }
         });
+    }
 
-        recordStopButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(isRecording){
-                    stateText.setText("待機中");
-                    isRecording = false;
-                    endRecordNum++;
-                    if(endRecordNum == 3){
-                        changeCsvToArff();
-                        endRecordNum++;
-                    }
-                }
-            }
-        });
-
+    public void recordStop(){
+        if(isRecording){
+            stateText.setText("待機中");
+            isRecording = false;
+            sampleNum = 0;
+        }
     }
 
     public void checkRadioButton(View v){
@@ -125,14 +129,20 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
     }
 
     public void startLearning(View v){
+
+
         if(isLearned){
             isLearned = false;
             stateText.setText("待機中");
-            endRecordNum = 0;
+            learnButton.setText("LEARN");
             return;
         }
 
+        learnButton.setText("STOP");
+
         try {
+            changeCsvToArff();
+
             stateText.setText("学習中");
             //学習データの生成
             FileInputStream inputStream = openFileInput("learnData.arff");
@@ -144,6 +154,8 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
             classifier = new J48();
             classifier.buildClassifier(instances);
             eval = new Evaluation(instances);
+            eval.evaluateModel(classifier, instances);      //モデルと学習データから評価
+            Log.v("test",eval.toSummaryString());
             a = new Attribute("a", 0);
 
             judgment();
@@ -157,13 +169,11 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
 
     public void judgment(){
         try {
-            eval.evaluateModel(classifier, instances);      //モデルと学習データから評価
-            Instance instance = new DenseInstance(2) {
-            };
+            Instance instance = new DenseInstance(2);
             instance.setValue(a, acceleration);
             instance.setDataset(instances);
             double result = classifier.classifyInstance(instance);
-            stateText.setText(stateList.get((int) result)+":"+result);
+            stateText.setText(stateList.get((int) result));
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -224,13 +234,15 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
                 + "Y-axis : " + gy + "\n"
                 + "Z-axis : " + gz + "\n"
                 + "XYZ    : " + acceleration + "\n"
-                + "endNum :" + endRecordNum + "\n");
+                + "sample :" + sampleNum + "\n");
 
         if(isLearned) {
             judgment();
         }
 
-        h.postDelayed(this, 100);
+        progressBar.setProgress(sampleNum);
+
+        h.postDelayed(this, 150);
     }
 
     @Override
@@ -241,7 +253,7 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
                 sm.getSensorList(Sensor.TYPE_ACCELEROMETER);
         if (0 < sensors.size()) {
             sm.registerListener(this, sensors.get(0),
-                    SensorManager.SENSOR_DELAY_NORMAL);
+                    SensorManager.SENSOR_DELAY_FASTEST);
         }
     }
 
@@ -269,7 +281,6 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
 
     public void recordSensor(){
         if(isRecording) {
-
             String output = BigDecimal.valueOf(gx).toPlainString() + ","
                     + BigDecimal.valueOf(gy).toPlainString() + ","
                     + BigDecimal.valueOf(gz).toPlainString() + ","
@@ -280,6 +291,10 @@ public class MainActivity extends Activity implements Runnable, SensorEventListe
                 outputStream = openFileOutput(filename, MODE_APPEND);
                 outputStream.write(output.getBytes("UTF-8"));
                 outputStream.close();
+                sampleNum++;
+                if(sampleNum>=1000){
+                    recordStop();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
